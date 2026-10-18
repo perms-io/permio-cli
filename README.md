@@ -35,8 +35,8 @@ Not released yet. Once it is:
 brew install PrivateJAR/tap/permio
 
 # npm / npx (downloads the prebuilt binary for your platform)
-npx @permio/cli --help
-npm install -g @permio/cli
+npx permio-cli --help
+npm install -g permio-cli
 
 # Go 1.24+
 go install github.com/PrivateJAR/permio-cli/cmd/permio@latest
@@ -386,7 +386,7 @@ Agents can use `permio` directly from a shell; no extra server is needed.
 - Prefer a **check-only** key for agents that only need to check and read, and
   `plan` before `apply`. `apply` never prompts without a terminal; it requires
   `--yes`.
-- With npm available and nothing installed, `npx @permio/cli ...` works the same
+- With npm available and nothing installed, `npx permio-cli ...` works the same
   way.
 
 ```sh
@@ -429,7 +429,7 @@ Layout:
 | `pkg/apikey` | local API key format validation |
 | `pkg/fakeserver` | in-memory PermissionsService for tests |
 | `schema/` | JSON Schema for `permio.yaml` |
-| `npm/` | npm wrapper package (`@permio/cli`) |
+| `npm/` | npm wrapper package (`permio-cli`) |
 
 The `pkg/` packages are pre-1.0 and may change.
 

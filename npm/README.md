@@ -1,12 +1,12 @@
-# @permio/cli
+# permio-cli
 
 npm wrapper for [`permio`](https://github.com/PrivateJAR/permio-cli), the
 perms.io command-line interface. It lets you (and AI agents) run the CLI with
 `npx` without installing Go or a binary by hand:
 
 ```sh
-npx @permio/cli check user_123 /documents/42 document.read
-npm install -g @permio/cli && permio --help
+npx permio-cli check user_123 /documents/42 document.read
+npm install -g permio-cli && permio --help
 ```
 
 ## How it works
@@ -37,6 +37,5 @@ Not published yet. For each release:
    without the `v`).
 3. `cd npm && npm publish --access public`.
 
-The package name `@permio/cli` needs the `permio` npm organisation. If that
-scope is not available, rename the package to `permio-cli` in `package.json`
-(the unscoped name `permio` is already used by the JavaScript SDK).
+The package is `permio-cli` because the name `permio` is the JavaScript SDK.
+`npx permio-cli` runs the `permio` binary, the package's only command.
