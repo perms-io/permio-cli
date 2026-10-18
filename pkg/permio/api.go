@@ -155,6 +155,13 @@ func (c *Client) GetPermission(ctx context.Context, name string) (*Permission, e
 func (c *Client) CreatePermission(ctx context.Context, name, description string) (*Permission, error) {
 	res, err := c.Raw.CreatePermission(ctx, &pb.CreatePermissionRequest{ProjectName: c.Project, Name: name, Description: description})
 	if err != nil {
+		// The API answers a clash with an existing permission (same name, other
+		// description) with a bare Internal "failed to create permission".
+		if isInternal(err) {
+			if p, gerr := c.GetPermission(ctx, name); gerr == nil {
+				return nil, alreadyExists("permission %q already exists with description %q; update it instead", name, p.Description)
+			}
+		}
 		return nil, err
 	}
 	p := permissionFromPB(res)
@@ -171,9 +178,16 @@ func (c *Client) UpdatePermission(ctx context.Context, name, newName, descriptio
 	return &p, nil
 }
 
-// DeletePermission deletes a permission.
+// DeletePermission deletes a permission. Deleting one that does not exist succeeds.
 func (c *Client) DeletePermission(ctx context.Context, name string) error {
 	_, err := c.Raw.DeletePermission(ctx, &pb.DeletePermissionRequest{ProjectName: c.Project, Name: name})
+	// The API answers a delete of a missing permission with a bare Internal
+	// "failed to delete permission"; treat it as done if the permission is gone.
+	if err != nil && isInternal(err) {
+		if _, gerr := c.GetPermission(ctx, name); IsNotFound(gerr) {
+			return nil
+		}
+	}
 	return err
 }
 
@@ -242,6 +256,17 @@ func FindRole(roles []Role, ref string) (*Role, error) {
 func (c *Client) CreateRole(ctx context.Context, name, description string, permissions []string) (*Role, error) {
 	res, err := c.Raw.CreateRole(ctx, &pb.CreateRoleRequest{ProjectName: c.Project, Name: name, Description: description, Permissions: uniq(permissions)})
 	if err != nil {
+		// The API answers a clash with an existing role of the same name (but other
+		// permissions or description) with a bare Internal "failed to create role".
+		if isInternal(err) {
+			if roles, lerr := c.ListRoles(ctx, ""); lerr == nil {
+				for _, r := range roles {
+					if r.Name == name {
+						return nil, alreadyExists("role %q already exists (ID %s) with other permissions or description; update it instead", name, r.ID)
+					}
+				}
+			}
+		}
 		return nil, err
 	}
 	r := roleFromPB(res)

@@ -72,6 +72,10 @@ func TestLiveWrite(t *testing.T) {
 		}
 	}
 	must("permissions", "create", perm)
+	if r := run("permissions", "create", perm, "--description", "different", "--json"); r.code != ExitError || !strings.Contains(r.stderr, "already_exists") {
+		t.Fatalf("permission clash: %+v", r)
+	}
+	must("permissions", "delete", perm+".missing")
 	must("roles", "create", role, "-p", perm)
 	must("groups", "create", group, "--member", user)
 	must("grants", "add", "--principal", "group:"+group, "--resource", res, "-r", role)

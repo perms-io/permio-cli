@@ -422,3 +422,31 @@ func TestConfigPrecedenceAndProfiles(t *testing.T) {
 		t.Fatalf("effective: %v", eff)
 	}
 }
+
+// The API answers name clashes and deletes of missing permissions with a bare
+// Internal error; the CLI turns those into clear results.
+func TestCreateClashesAndIdempotentDelete(t *testing.T) {
+	h := newHarness(t)
+	h.seed()
+
+	r := h.run("permissions", "create", "document.read", "--description", "other", "--json")
+	if r.code != ExitError || !strings.Contains(r.stderr, `"already_exists"`) || !strings.Contains(r.stderr, "already exists") {
+		t.Fatalf("permission clash: %+v", r)
+	}
+	// Same name and description: succeeds and changes nothing.
+	h.must("permissions", "create", "document.read")
+
+	r = h.run("roles", "create", "viewer", "-p", "document.edit")
+	if r.code != ExitError || !strings.Contains(r.stderr, `role "viewer" already exists`) {
+		t.Fatalf("role clash: %+v", r)
+	}
+	// An identical create returns the existing role.
+	h.must("roles", "create", "viewer", "-p", "document.read")
+
+	h.must("permissions", "delete", "nope.none")
+	h.must("permissions", "create", "temp.perm")
+	h.must("permissions", "delete", "temp.perm")
+	if r := h.run("permissions", "get", "temp.perm"); r.code != ExitError {
+		t.Fatalf("permission should be gone: %+v", r)
+	}
+}
