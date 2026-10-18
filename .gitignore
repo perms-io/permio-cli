@@ -1,0 +1,6 @@
+/dist/
+/completions/
+/permio
+/permio.exe
+node_modules/
+/npm/vendor/
