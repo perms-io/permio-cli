@@ -1,5 +1,5 @@
 {
-  "name": "@permio/cli",
+  "name": "permio-cli",
   "version": "0.1.0",
   "description": "perms.io command-line interface (permio). Downloads the prebuilt Go binary for your platform.",
   "license": "MIT",
