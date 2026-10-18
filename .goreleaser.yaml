@@ -1,0 +1,92 @@
+# GoReleaser configuration. Releases are built by .github/workflows/release.yml
+# when a v* tag is pushed. Check locally with:
+#   goreleaser check
+#   goreleaser release --snapshot --clean
+version: 2
+
+project_name: permio
+
+before:
+  hooks:
+    - go mod tidy
+    - go test ./...
+    - ./scripts/completions.sh
+
+builds:
+  - id: permio
+    main: ./cmd/permio
+    binary: permio
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/PrivateJAR/permio-cli/internal/cli.Version={{ .Version }}
+      - -X github.com/PrivateJAR/permio-cli/internal/cli.Commit={{ .ShortCommit }}
+      - -X github.com/PrivateJAR/permio-cli/internal/cli.Date={{ .Date }}
+
+archives:
+  - id: permio
+    # permio_<version>_<os>_<arch>.tar.gz (zip on Windows). The npm wrapper in
+    # npm/ downloads these names; keep them in sync.
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - LICENSE
+      - README.md
+      - CHANGELOG.md
+      - completions/*
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+
+# Homebrew: publishes a cask to github.com/PrivateJAR/homebrew-tap.
+# That repository does not exist yet; create it (empty, public) and add a
+# HOMEBREW_TAP_GITHUB_TOKEN secret with contents:write on it before the first
+# release. Until then, the release workflow skips this step (see release.yml).
+homebrew_casks:
+  - name: permio
+    ids: [permio]
+    repository:
+      owner: PrivateJAR
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Casks
+    homepage: https://perms.io
+    description: Command-line interface for perms.io permissions
+    license: MIT
+    binaries: [permio]
+    commit_author:
+      name: Will
+      email: 2000.will@live.com
+    completions:
+      bash: completions/permio.bash
+      zsh: completions/permio.zsh
+      fish: completions/permio.fish
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/permio"]
+          end
+
+release:
+  github:
+    owner: PrivateJAR
+    name: permio-cli
+  draft: true
