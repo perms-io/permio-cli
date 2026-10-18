@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/PrivateJAR/permio-cli/main/schema/permio.schema.json",
+  "title": "Permio project configuration (permio.yaml)",
+  "description": "Permissions, roles, groups and grants of one perms.io project, managed with `permio plan` and `permio apply`. Objects in the file are created or updated. A role's permissions, a group's members (when given) and a grant's roles and permissions are each the full set. With --prune, objects in the project that are not in the file are deleted.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project": {
+      "description": "The project this file describes. Defaults to the configured project (--project, PERMIO_PROJECT or the profile).",
+      "type": "string",
+      "pattern": "^[a-z0-9-]{1,32}$"
+    },
+    "permissions": {
+      "description": "The project's permissions. Each is a name, or an object with a name and a description. A bare name leaves the description unchanged.",
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/permissionName" },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name"],
+            "properties": {
+              "name": { "$ref": "#/$defs/permissionName" },
+              "description": { "type": "string", "description": "Omit to leave the description unchanged." }
+            }
+          }
+        ]
+      }
+    },
+    "roles": {
+      "description": "Roles keyed by role name. Grants refer to roles by these names.",
+      "type": "object",
+      "propertyNames": { "minLength": 1, "maxLength": 128, "pattern": "^[^\\u0000-\\u001f\\u007f]+$" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "description": { "type": "string", "description": "Omit to leave the description unchanged." },
+          "permissions": {
+            "description": "The role's full permission set. Each must be listed under permissions or already exist in the project.",
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "$ref": "#/$defs/permissionName" }
+          }
+        }
+      }
+    },
+    "groups": {
+      "description": "Groups keyed by slug. Grant to a group with the principal \"group:<slug>\".",
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9-]{1,64}$" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "description": { "type": "string", "maxLength": 1024, "description": "Omit to leave the description unchanged." },
+          "members": {
+            "description": "The group's full member list (principal IDs). Omit to leave members unmanaged. Groups cannot contain groups.",
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1, "not": { "pattern": "^group:" } }
+          }
+        }
+      }
+    },
+    "grants": {
+      "description": "Grants. Each entry is the full set of roles and permissions for one (principal, resource) pair; list each pair once. Empty lists revoke everything on that pair.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["principal", "resource"],
+        "properties": {
+          "principal": {
+            "description": "Principal ID: a user or service ID, or group:<slug>.",
+            "type": "string",
+            "minLength": 1
+          },
+          "resource": {
+            "description": "Resource URI, e.g. /projects/123. The grant applies to it and everything below it; a \"_\" segment matches any one segment.",
+            "type": "string",
+            "maxLength": 2048,
+            "pattern": "^(/[^/()\\[\\]{}*+?|^$\\\\\\s]+)+$"
+          },
+          "roles": {
+            "description": "Role names (from roles, or existing in the project).",
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "permissions": {
+            "description": "Permissions granted directly.",
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "$ref": "#/$defs/permissionName" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "permissionName": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9._-]{1,128}$",
+      "examples": ["document.read"]
+    }
+  }
+}

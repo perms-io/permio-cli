@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/PrivateJAR/permio-cli/main/schema/permio.schema.json
+#
+# Example project for `permio plan -f examples/permio.yaml`.
+project: default
+
+permissions:
+  - document.read
+  - { name: document.edit, description: Edit documents }
+  - document.delete
+
+roles:
+  viewer:
+    description: Can read documents
+    permissions: [document.read]
+  editor:
+    description: Can read and edit documents
+    permissions: [document.read, document.edit]
+  owner:
+    permissions: [document.read, document.edit, document.delete]
+
+groups:
+  design:
+    description: Design team
+    members: [user_123, user_456]
+
+grants:
+  # Everyone in the design group can edit everything in project 123.
+  - { principal: group:design, resource: /projects/123, roles: [editor] }
+  # user_789 owns one document.
+  - { principal: user_789, resource: /projects/123/documents/42, roles: [owner] }
+  # Anyone with this grant can read the public folder of every project.
+  - { principal: user_999, resource: /projects/_/public, roles: [viewer] }
