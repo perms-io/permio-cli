@@ -146,3 +146,17 @@ func configError(format string, args ...any) error {
 func invalid(format string, args ...any) error {
 	return &Error{Kind: KindInvalid, Code: codes.InvalidArgument, Message: fmt.Sprintf(format, args...)}
 }
+
+func alreadyExists(format string, args ...any) error {
+	return &Error{Kind: KindAlreadyExists, Code: codes.AlreadyExists, Message: fmt.Sprintf(format, args...)}
+}
+
+// isInternal reports whether err is a gRPC Internal error, which the API uses
+// for failures it does not classify (e.g. unique-index clashes).
+func isInternal(err error) bool {
+	var pe *Error
+	if errors.As(err, &pe) {
+		return pe.Code == codes.Internal
+	}
+	return status.Code(err) == codes.Internal
+}

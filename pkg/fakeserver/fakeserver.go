@@ -351,6 +351,10 @@ func (s *Server) DeletePermission(_ context.Context, req *pb.DeletePermissionReq
 	defer s.mu.Unlock()
 	p := s.proj(req.ProjectName)
 	s.log("DeletePermission %s", req.Name)
+	if p.perms[req.Name] == nil {
+		// Like the real service, which fails when no row was deleted.
+		return nil, status.Error(codes.Internal, "failed to delete permission")
+	}
 	delete(p.perms, req.Name)
 	return &emptypb.Empty{}, nil
 }
@@ -404,6 +408,11 @@ func (s *Server) CreateRole(_ context.Context, req *pb.CreateRoleRequest) (*pb.R
 	}
 	for _, r := range p.roles {
 		if r.name == req.Name {
+			// The real service returns the existing role when the request matches it
+			// exactly, and fails on its unique (name, organisation) index otherwise.
+			if r.description == req.Description && sameSet(r.perms, req.Permissions) {
+				return s.rolePB(p, r), nil
+			}
 			return nil, status.Error(codes.Internal, "failed to create role")
 		}
 	}
@@ -859,4 +868,19 @@ func (s *Server) ListGroupMembers(_ context.Context, req *pb.ListGroupMembersReq
 		return nil, err
 	}
 	return &pb.ListGroupMembersResponse{Members: items, Pagination: pg}, nil
+}
+
+func sameSet(a, b []string) bool {
+	m := map[string]bool{}
+	for _, x := range a {
+		m[x] = true
+	}
+	n := map[string]bool{}
+	for _, x := range b {
+		if !m[x] {
+			return false
+		}
+		n[x] = true
+	}
+	return len(n) == len(m)
 }

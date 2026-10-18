@@ -28,3 +28,11 @@ All notable changes to this project are documented here. The format follows
 - `permio version` and shell completion.
 - Release configuration (GoReleaser, Homebrew cask, GitHub Actions) and an npm
   wrapper package in `npm/`.
+
+### Fixed
+
+- `permissions delete` of a permission that does not exist now succeeds, as
+  documented, instead of failing with "failed to delete permission".
+- Creating a permission or role whose name is already taken (with a different
+  description or permissions) now reports `already_exists` with the existing
+  object, instead of a bare "failed to create ...".
