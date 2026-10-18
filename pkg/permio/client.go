@@ -86,7 +86,15 @@ func New(opts Options) (*Client, error) {
 		dial = append(dial, grpc.WithUserAgent(opts.UserAgent))
 	}
 	dial = append(dial, opts.DialOptions...)
-	conn, err := grpc.NewClient(opts.Address, dial...)
+	// passthrough: the address is dialled as given (with the system resolver),
+	// like grpc.Dial did. The CLI talks to one gateway host for a few calls, so
+	// it needs neither DNS-based balancing nor service-config TXT lookups.
+	target := opts.Address
+	if !strings.Contains(target, "://") {
+		target = "passthrough:///" + target
+	}
+	dial = append(dial, grpc.WithDisableServiceConfig())
+	conn, err := grpc.NewClient(target, dial...)
 	if err != nil {
 		return nil, configError("invalid API address %q: %v", opts.Address, err)
 	}
