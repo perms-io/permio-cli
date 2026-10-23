@@ -27,7 +27,7 @@ import (
 type Options struct {
 	// APIKey is a "perms_" key from the dashboard, or a legacy JWT key.
 	APIKey string
-	// Address is the gateway's host:port, e.g. "temp-api.perms.io:443".
+	// Address is the gateway's host:port, e.g. "api.perms.io:443".
 	Address string
 	// Insecure dials without TLS. Only for local servers.
 	Insecure bool
