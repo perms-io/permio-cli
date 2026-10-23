@@ -70,13 +70,12 @@ Settings, from highest to lowest precedence:
 | Setting | Flag | Environment | Profile key | Default |
 | --- | --- | --- | --- | --- |
 | API key | `--api-key` | `PERMIO_API_KEY` | `api-key` | none |
-| API URL | `--api-url` | `PERMIO_API_URL` | `api-url` | `temp-api.perms.io:443` (production) |
+| API URL | `--api-url` | `PERMIO_API_URL` | `api-url` | `api.perms.io:443` (production) |
 | Project | `--project` | `PERMIO_PROJECT` | `project` | `default` |
 | Profile | `--profile` | `PERMIO_PROFILE` | `permio config use` | `default` |
 
 `--api-url` accepts `host`, `host:port`, `https://host[:port]`, or the aliases
-`prod` and `dev` (`dev-api.perms.io:443`). Production will move to
-`api.perms.io`; the default will follow.
+`prod` and `dev` (`dev-api.perms.io:443`).
 
 ### Profiles
 

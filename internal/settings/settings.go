@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	// DefaultAPIURL is the production gateway. It will move to api.perms.io.
-	DefaultAPIURL = "temp-api.perms.io:443"
+	// DefaultAPIURL is the production gateway.
+	DefaultAPIURL = "api.perms.io:443"
 	// DevAPIURL is the development gateway.
 	DevAPIURL = "dev-api.perms.io:443"
 	// DefaultProject is created with every organisation.
