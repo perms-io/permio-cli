@@ -13,17 +13,24 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     steps:
-      - uses: actions/checkout@v5
+      # Blacksmith's checkout keeps a git mirror on a sticky disk, which makes
+      # the full-history fetch GoReleaser needs cheap on warm runs.
+      - uses: useblacksmith/checkout@v1
         with:
           fetch-depth: 0
+      # Module and build cache (served by Blacksmith's cache) speeds up the
+      # cross-compiles and the `go test` before-hook.
       - uses: actions/setup-go@v6
         with:
           go-version: stable
+          cache: true
+          cache-dependency-path: go.sum
       - uses: goreleaser/goreleaser-action@v6
         with:
-          version: "~> v2"
+          # Pinned; keep in sync with ci.yml.
+          version: v2.19.0
           args: release --clean ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN == '' && '--skip=homebrew' || '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -69,7 +69,7 @@ homebrew_casks:
     directory: Casks
     homepage: https://perms.io
     description: Command-line interface for perms.io permissions
-    license: MIT
+    license: Apache-2.0
     binaries: [permio]
     commit_author:
       name: Will
@@ -80,9 +80,9 @@ homebrew_casks:
       fish: completions/permio.fish
     hooks:
       post:
-        install: |
-          if OS.mac?
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/permio"]
+        install_steps: |
+          on_macos do
+            run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ .StagedPath }}/permio"]
           end
 
 release:

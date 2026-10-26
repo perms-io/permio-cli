@@ -437,4 +437,4 @@ Releases are built by GoReleaser (`.goreleaser.yaml`) from `v*` tags via
 
 ## License
 
-MIT
+Apache License 2.0. See [LICENSE](LICENSE).
