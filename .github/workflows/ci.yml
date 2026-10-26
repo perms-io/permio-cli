@@ -10,23 +10,31 @@ permissions:
 
 jobs:
   test:
-    name: Test (Go ${{ matrix.go }}, ${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    name: Test (Go ${{ matrix.go }})
+    # Blacksmith runner. Its colocated cache backs actions/cache, so setup-go's
+    # module and build cache below is restored from Blacksmith, not GitHub.
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
         go: ["1.24.x", "stable"]
     steps:
-      - uses: actions/checkout@v5
+      - uses: useblacksmith/checkout@v1
       - uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go }}
+          cache: true
+          cache-dependency-path: go.sum
       - name: gofmt
-        if: matrix.os == 'ubuntu-latest'
         run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
       - name: go vet
         run: go vet ./...
+      # Tests run on Linux only. Cross-vetting (which type-checks the test
+      # files too) keeps the darwin and windows builds honest.
+      - name: go vet (darwin, windows)
+        run: |
+          GOOS=darwin GOARCH=arm64 go vet ./...
+          GOOS=windows GOARCH=amd64 go vet ./...
       - name: go test
         run: go test -race ./...
         env:
@@ -36,19 +44,21 @@ jobs:
 
   goreleaser-check:
     name: GoReleaser config
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     steps:
-      - uses: actions/checkout@v5
+      - uses: useblacksmith/checkout@v1
       - uses: goreleaser/goreleaser-action@v6
         with:
-          version: "~> v2"
+          # Pinned so a new GoReleaser release can't fail CI with fresh
+          # deprecations. Keep in sync with release.yml.
+          version: v2.19.0
           args: check
 
   npm-wrapper:
     name: npm wrapper
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     steps:
-      - uses: actions/checkout@v5
+      - uses: useblacksmith/checkout@v1
       - uses: actions/setup-node@v5
         with:
           node-version: 22
