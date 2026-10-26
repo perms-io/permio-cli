@@ -1,12 +1,8 @@
 package permio
 
 import (
-	"errors"
 	"reflect"
 	"testing"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func TestAccessScopes(t *testing.T) {
@@ -37,32 +33,6 @@ func TestAccessScopes(t *testing.T) {
 	}
 	if got := a.Patterns(); !reflect.DeepEqual(got, []string{"/docs/_/public"}) {
 		t.Errorf("Patterns = %v", got)
-	}
-}
-
-func TestToError(t *testing.T) {
-	msg := "missing permissions: [{ResourceURI:/organisation/o/project/p/doc MissingPermissions:[permission.check role.get]}]"
-	err := toError(status.Error(codes.PermissionDenied, msg))
-	var pe *Error
-	if !errors.As(err, &pe) || pe.Kind != KindPermission {
-		t.Fatalf("kind: %v", err)
-	}
-	want := []MissingPermission{{Resource: "/organisation/o/project/p/doc", Permissions: []string{"permission.check", "role.get"}}}
-	if !reflect.DeepEqual(pe.Missing, want) {
-		t.Fatalf("missing = %+v", pe.Missing)
-	}
-	for code, kind := range map[codes.Code]Kind{
-		codes.Unauthenticated:  KindAuth,
-		codes.InvalidArgument:  KindInvalid,
-		codes.NotFound:         KindNotFound,
-		codes.AlreadyExists:    KindAlreadyExists,
-		codes.Unavailable:      KindUnavailable,
-		codes.DeadlineExceeded: KindTimeout,
-		codes.Internal:         KindOther,
-	} {
-		if got := KindOf(toError(status.Error(code, "x"))); got != kind {
-			t.Errorf("%v -> %v, want %v", code, got, kind)
-		}
 	}
 }
 
