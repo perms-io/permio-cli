@@ -105,7 +105,7 @@ func (a *App) rolesCreate() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a role",
-		Long:  `Create a role. Its permissions must already exist. Role names are unique.`,
+		Long:  `Create a role. Its permissions must already exist. Role names are unique: creating a role whose name is taken returns that role, and a --description or --permission list that differs replaces the stored one.`,
 		Example: `  permio roles create editor --permission document.read,document.edit --description "Can edit documents"
   permio roles create viewer -p document.read --json`,
 		Args: cobra.ExactArgs(1),

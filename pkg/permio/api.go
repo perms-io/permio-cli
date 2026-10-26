@@ -224,14 +224,42 @@ func (c *Client) ListGroupMembers(ctx context.Context, name string) ([]string, e
 	return out, err
 }
 
-// AddGroupMembers adds principals to a group, 100 per call.
+// AddGroupMembers adds principals to a group, 100 per call. The SDK takes at
+// most MaxBatch principals per write, so larger lists are split here. If a
+// call fails, the result covers the calls that succeeded before it.
 func (c *Client) AddGroupMembers(ctx context.Context, name string, principals []string) (*MembershipChange, error) {
-	return c.SDK.Groups().AddMembers(ctx, name, principals)
+	return c.inMemberBatches(ctx, name, principals, c.SDK.Groups().AddMembers)
 }
 
-// RemoveGroupMembers removes principals from a group, 100 per call.
+// RemoveGroupMembers removes principals from a group, 100 per call, like
+// AddGroupMembers.
 func (c *Client) RemoveGroupMembers(ctx context.Context, name string, principals []string) (*MembershipChange, error) {
-	return c.SDK.Groups().RemoveMembers(ctx, name, principals)
+	return c.inMemberBatches(ctx, name, principals, c.SDK.Groups().RemoveMembers)
+}
+
+func (c *Client) inMemberBatches(ctx context.Context, name string, principals []string, write func(context.Context, string, []string) (*MembershipChange, error)) (*MembershipChange, error) {
+	if len(principals) <= MaxBatch {
+		// One write; the SDK validates and de-duplicates.
+		return write(ctx, name, principals)
+	}
+	out := &MembershipChange{Changed: []string{}, Unchanged: []string{}}
+	seen := make(map[string]bool, len(principals))
+	var unique []string
+	for _, p := range principals {
+		if !seen[p] {
+			seen[p] = true
+			unique = append(unique, p)
+		}
+	}
+	for batch := range slices.Chunk(unique, MaxBatch) {
+		res, err := write(ctx, name, batch)
+		if err != nil {
+			return out, err
+		}
+		out.Changed = append(out.Changed, res.Changed...)
+		out.Unchanged = append(out.Unchanged, res.Unchanged...)
+	}
+	return out, nil
 }
 
 // ListAccess answers "where may principal use permission at or below under?",

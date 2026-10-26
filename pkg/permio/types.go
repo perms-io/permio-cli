@@ -50,7 +50,8 @@ const (
 	MaxResourceURILength = sdk.MaxResourceURILength
 	// PageSize is the page size used when following pagination (the API maximum).
 	PageSize = sdk.MaxPageSize
-	// MaxBatch is the most resources or permissions one Check or BatchCheck accepts.
+	// MaxBatch is the most resources or permissions one Check or BatchCheck
+	// accepts, and the most principals one group membership write accepts.
 	MaxBatch = sdk.MaxBatch
 )
 

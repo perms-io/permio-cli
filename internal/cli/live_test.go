@@ -72,8 +72,9 @@ func TestLiveWrite(t *testing.T) {
 		}
 	}
 	must("permissions", "create", perm)
-	if r := run("permissions", "create", perm, "--description", "different", "--json"); r.code != ExitError || !strings.Contains(r.stderr, "already_exists") {
-		t.Fatalf("permission clash: %+v", r)
+	// Create is an upsert: a new description replaces the stored one.
+	if r := run("permissions", "create", perm, "--description", "different", "--json"); r.code != 0 || !strings.Contains(r.stdout, `"different"`) {
+		t.Fatalf("permission upsert: %+v", r)
 	}
 	must("permissions", "delete", perm+".missing")
 	must("roles", "create", role, "-p", perm)

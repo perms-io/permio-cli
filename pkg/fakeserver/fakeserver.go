@@ -306,9 +306,10 @@ func (s *Server) CreatePermission(_ context.Context, req *pb.CreatePermissionReq
 	p := s.proj(req.ProjectName)
 	s.log("CreatePermission %s", req.Name)
 	if existing := p.perms[req.Name]; existing != nil {
-		if existing.Description != req.Description {
-			// The real service has a unique (name, organisation) index, so this fails.
-			return nil, status.Error(codes.Internal, "failed to create permission")
+		// Like the real service, create is an upsert: a non-empty description
+		// that differs replaces the stored one; an empty one keeps it.
+		if req.Description != "" {
+			existing.Description = req.Description
 		}
 		return existing, nil
 	}
@@ -336,6 +337,9 @@ func (s *Server) UpdatePermission(_ context.Context, req *pb.UpdatePermissionReq
 	if perm == nil {
 		return nil, status.Error(codes.NotFound, "permission not found")
 	}
+	if req.NewName != nil && *req.NewName != req.Name && p.perms[*req.NewName] != nil {
+		return nil, status.Errorf(codes.AlreadyExists, "a permission named %q already exists in project %q", *req.NewName, req.ProjectName)
+	}
 	s.log("UpdatePermission %s", req.Name)
 	perm.Description = req.Description
 	if req.NewName != nil && *req.NewName != req.Name {
@@ -351,10 +355,7 @@ func (s *Server) DeletePermission(_ context.Context, req *pb.DeletePermissionReq
 	defer s.mu.Unlock()
 	p := s.proj(req.ProjectName)
 	s.log("DeletePermission %s", req.Name)
-	if p.perms[req.Name] == nil {
-		// Like the real service, which fails when no row was deleted.
-		return nil, status.Error(codes.Internal, "failed to delete permission")
-	}
+	// Like the real service, deleting a missing permission succeeds.
 	delete(p.perms, req.Name)
 	return &emptypb.Empty{}, nil
 }
@@ -408,12 +409,15 @@ func (s *Server) CreateRole(_ context.Context, req *pb.CreateRoleRequest) (*pb.R
 	}
 	for _, r := range p.roles {
 		if r.name == req.Name {
-			// The real service returns the existing role when the request matches it
-			// exactly, and fails on its unique (name, organisation) index otherwise.
-			if r.description == req.Description && sameSet(r.perms, req.Permissions) {
-				return s.rolePB(p, r), nil
+			// Like the real service, create is an upsert: a non-empty description
+			// or permission list replaces the stored one; empty ones keep it.
+			if req.Description != "" {
+				r.description = req.Description
 			}
-			return nil, status.Error(codes.Internal, "failed to create role")
+			if len(req.Permissions) > 0 && !sameSet(r.perms, req.Permissions) {
+				r.perms = append([]string{}, req.Permissions...)
+			}
+			return s.rolePB(p, r), nil
 		}
 	}
 	s.nextID++
@@ -444,6 +448,11 @@ func (s *Server) UpdateRole(_ context.Context, req *pb.UpdateRoleRequest) (*pb.R
 	if m := p.missingPerms(req.Permissions); len(m) > 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "specified permissions not found: %v", m)
 	}
+	for _, other := range p.roles {
+		if other != r && other.name == req.Name {
+			return nil, status.Errorf(codes.AlreadyExists, "a role named %q already exists in project %q", req.Name, req.ProjectName)
+		}
+	}
 	s.log("UpdateRole %s", r.name)
 	r.name, r.description, r.perms = req.Name, req.Description, append([]string{}, req.Permissions...)
 	return s.rolePB(p, r), nil
@@ -455,7 +464,8 @@ func (s *Server) DeleteRole(_ context.Context, req *pb.DeleteRoleRequest) (*empt
 	p := s.proj(req.ProjectName)
 	r := p.roles[req.Id]
 	if r == nil {
-		return nil, status.Error(codes.NotFound, "role not found")
+		// Like the real service, deleting a missing role succeeds.
+		return &emptypb.Empty{}, nil
 	}
 	// The real service fails to delete a role that still names a deleted permission.
 	if m := p.missingPerms(r.perms); len(m) > 0 {
@@ -805,6 +815,10 @@ func (s *Server) ListGroups(_ context.Context, req *pb.ListGroupsRequest) (*pb.L
 func (s *Server) AddGroupMembers(_ context.Context, req *pb.AddGroupMembersRequest) (*pb.AddGroupMembersResponse, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if len(req.PrincipalIds) > 100 {
+		// Like the real service, which takes at most 100 principals per call.
+		return nil, status.Error(codes.InvalidArgument, "at most 100 principals per call")
+	}
 	g := s.proj(req.ProjectName).groups[req.Name]
 	if g == nil {
 		return nil, status.Error(codes.NotFound, "group not found")
@@ -830,6 +844,10 @@ func (s *Server) AddGroupMembers(_ context.Context, req *pb.AddGroupMembersReque
 func (s *Server) RemoveGroupMembers(_ context.Context, req *pb.RemoveGroupMembersRequest) (*pb.RemoveGroupMembersResponse, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if len(req.PrincipalIds) > 100 {
+		// Like the real service, which takes at most 100 principals per call.
+		return nil, status.Error(codes.InvalidArgument, "at most 100 principals per call")
+	}
 	g := s.proj(req.ProjectName).groups[req.Name]
 	if g == nil {
 		return nil, status.Error(codes.NotFound, "group not found")
