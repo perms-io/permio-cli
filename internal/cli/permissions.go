@@ -95,7 +95,7 @@ func (a *App) permissionsCreate() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name...>",
 		Short: "Create one or more permissions",
-		Long:  `Create permissions. Creating a permission that already exists with the same description succeeds and changes nothing.`,
+		Long:  `Create permissions. Creating a permission that already exists succeeds: a --description that differs replaces the stored one, and leaving --description out keeps it.`,
 		Example: `  permio permissions create document.read --description "Read documents"
   permio permissions create document.read document.edit document.delete`,
 		Args: cobra.MinimumNArgs(1),

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -423,30 +424,57 @@ func TestConfigPrecedenceAndProfiles(t *testing.T) {
 	}
 }
 
-// The API answers name clashes and deletes of missing permissions with a bare
-// Internal error; the CLI turns those into clear results.
-func TestCreateClashesAndIdempotentDelete(t *testing.T) {
+// Creates are upserts and deletes are idempotent, as in the API; only a
+// rename onto a name in use is a clash.
+func TestCreateUpsertsAndIdempotentDelete(t *testing.T) {
 	h := newHarness(t)
 	h.seed()
 
-	r := h.run("permissions", "create", "document.read", "--description", "other", "--json")
-	if r.code != ExitError || !strings.Contains(r.stderr, `"already_exists"`) || !strings.Contains(r.stderr, "already exists") {
-		t.Fatalf("permission clash: %+v", r)
+	// A different description replaces the stored one.
+	r := h.must("permissions", "create", "document.read", "--description", "other", "--json")
+	if !strings.Contains(r.stdout, `"other"`) {
+		t.Fatalf("permission upsert: %+v", r)
 	}
-	// Same name and description: succeeds and changes nothing.
-	h.must("permissions", "create", "document.read")
+	// No description keeps it.
+	if r := h.must("permissions", "get", "document.read", "--json"); !strings.Contains(r.stdout, `"other"`) {
+		t.Fatalf("permission after create without description: %+v", r)
+	}
+	if r := h.run("permissions", "update", "document.edit", "--rename", "document.read", "--json"); r.code != ExitError || !strings.Contains(r.stderr, `"already_exists"`) || !strings.Contains(r.stderr, "already exists") {
+		t.Fatalf("permission rename clash: %+v", r)
+	}
 
-	r = h.run("roles", "create", "viewer", "-p", "document.edit")
-	if r.code != ExitError || !strings.Contains(r.stderr, `role "viewer" already exists`) {
-		t.Fatalf("role clash: %+v", r)
+	// Creating a role that exists returns it, with a new permission list.
+	r = h.must("roles", "create", "viewer", "-p", "document.edit", "--json")
+	if !strings.Contains(r.stdout, "document.edit") || strings.Contains(r.stdout, `"document.read"`) {
+		t.Fatalf("role upsert: %+v", r)
 	}
-	// An identical create returns the existing role.
-	h.must("roles", "create", "viewer", "-p", "document.read")
+	h.must("roles", "create", "viewer", "-p", "document.edit")
 
 	h.must("permissions", "delete", "nope.none")
 	h.must("permissions", "create", "temp.perm")
 	h.must("permissions", "delete", "temp.perm")
 	if r := h.run("permissions", "get", "temp.perm"); r.code != ExitError {
 		t.Fatalf("permission should be gone: %+v", r)
+	}
+}
+
+// The SDK takes at most 100 principals per membership write; the CLI splits
+// longer lists.
+func TestGroupMembersOverOneHundred(t *testing.T) {
+	h := newHarness(t)
+	h.seed()
+	h.must("groups", "create", "big")
+	args := []string{"groups", "members", "add", "big", "user_0"}
+	for i := range 250 {
+		args = append(args, fmt.Sprintf("user_%d", i))
+	}
+	r := h.must(append(args, "--json")...)
+	if res := decode[map[string]any](t, r.stdout); len(res["added"].([]any)) != 250 || len(res["already_members"].([]any)) != 0 {
+		t.Fatalf("add: %v", res)
+	}
+	args[2] = "remove"
+	r = h.must(append(args, "--json")...)
+	if res := decode[map[string]any](t, r.stdout); len(res["removed"].([]any)) != 250 {
+		t.Fatalf("remove: %v", res)
 	}
 }

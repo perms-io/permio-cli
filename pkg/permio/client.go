@@ -1,26 +1,16 @@
-// Package permio is a small Go client for the perms.io PermissionsService,
-// built on the generated github.com/PrivateJAR/permio-go stubs. It adds API key
-// auth, timeouts, retries for idempotent reads, typed errors and helpers that
-// follow pagination.
-//
-// It is used by the permio CLI and is not yet a stable public API.
+// Package permio is the CLI's client layer over the public Go SDK,
+// github.com/PrivateJAR/permio-go. The SDK provides auth, timeouts, retries
+// for idempotent reads and typed errors; this package adds what the CLI needs
+// on top: whole sorted listings, role lookup by name, and every grant in a
+// project.
 package permio
 
 import (
-	"context"
-	"crypto/tls"
-	"math/rand/v2"
-	"strings"
 	"time"
 
+	sdk "github.com/PrivateJAR/permio-go"
 	permissionsv1 "github.com/PrivateJAR/permio-go/proto/permissions/v1"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/metadata"
-
-	"github.com/PrivateJAR/permio-cli/pkg/apikey"
 )
 
 // Options configures a Client.
@@ -46,120 +36,52 @@ type Options struct {
 
 // Client talks to the PermissionsService.
 type Client struct {
+	// SDK is the public SDK client, in Project.
+	SDK *sdk.Client
 	// Raw is the generated client, with auth, timeouts, retries and error
 	// mapping applied.
 	Raw     permissionsv1.PermissionsServiceClient
 	Project string
-	conn    *grpc.ClientConn
 }
 
 // New validates the API key and creates a client. It does not connect until
-// the first call.
+// the first call. A malformed key is a KindAuth error.
 func New(opts Options) (*Client, error) {
-	if _, err := apikey.Validate(opts.APIKey); err != nil {
-		return nil, &Error{Kind: KindAuth, Message: err.Error()}
+	if _, err := sdk.ValidateAPIKey(opts.APIKey); err != nil {
+		// The CLI reports a malformed key like a rejected one (exit code 3).
+		return nil, &Error{Kind: KindAuth, Message: err.(*Error).Message}
 	}
 	if opts.Address == "" {
-		return nil, configError("no API address configured")
+		return nil, &Error{Kind: KindConfig, Message: "no API address configured"}
 	}
 	if opts.Project == "" {
-		return nil, configError("no project configured")
+		return nil, &Error{Kind: KindConfig, Message: "no project configured"}
 	}
 	if opts.Timeout <= 0 {
 		opts.Timeout = 15 * time.Second
 	}
-	retries := opts.Retries
-	if retries == 0 {
-		retries = 2
-	} else if retries < 0 {
-		retries = 0
-	}
-	creds := credentials.NewTLS(&tls.Config{MinVersion: tls.VersionTLS12})
-	if opts.Insecure {
-		creds = insecure.NewCredentials()
-	}
-	dial := []grpc.DialOption{
-		grpc.WithTransportCredentials(creds),
-		grpc.WithChainUnaryInterceptor(interceptor("Bearer "+opts.APIKey, opts.Timeout, retries)),
-	}
-	if opts.UserAgent != "" {
-		dial = append(dial, grpc.WithUserAgent(opts.UserAgent))
-	}
-	dial = append(dial, opts.DialOptions...)
-	// passthrough: the address is dialled as given (with the system resolver),
-	// like grpc.Dial did. The CLI talks to one gateway host for a few calls, so
-	// it needs neither DNS-based balancing nor service-config TXT lookups.
-	target := opts.Address
-	if !strings.Contains(target, "://") {
-		target = "passthrough:///" + target
-	}
-	dial = append(dial, grpc.WithDisableServiceConfig())
-	conn, err := grpc.NewClient(target, dial...)
+	c, err := sdk.New(sdk.Options{
+		APIKey:      opts.APIKey,
+		Endpoint:    opts.Address,
+		Insecure:    opts.Insecure,
+		Project:     opts.Project,
+		Timeout:     opts.Timeout,
+		Retry:       sdk.RetryOptions{MaxRetries: opts.Retries},
+		UserAgent:   opts.UserAgent,
+		DialOptions: opts.DialOptions,
+	})
 	if err != nil {
-		return nil, configError("invalid API address %q: %v", opts.Address, err)
+		return nil, err
 	}
-	return &Client{Raw: permissionsv1.NewPermissionsServiceClient(conn), Project: opts.Project, conn: conn}, nil
+	return &Client{SDK: c, Raw: c.Permissions(), Project: opts.Project}, nil
 }
 
 // Close releases the connection.
-func (c *Client) Close() error {
-	if c.conn == nil {
-		return nil
-	}
-	return c.conn.Close()
-}
+func (c *Client) Close() error { return c.SDK.Close() }
 
 // InProject returns a client that sends project instead of c.Project. It
 // shares c's connection; close only the original.
 func (c *Client) InProject(project string) *Client {
-	return &Client{Raw: c.Raw, Project: project}
-}
-
-const servicePrefix = "/permio.permissions.v1.PermissionsService/"
-
-// Read-only RPCs that are safe to repeat. Everything else is sent once.
-var idempotent = map[string]bool{
-	"Check": true, "BatchCheck": true, "GetPermission": true, "ListPermissions": true,
-	"GetRole": true, "ListRoles": true, "GetUserPermissionsAndRolesOnResource": true,
-	"ListPrincipals": true, "GetAllAssignmentsForPrincipal": true, "ListAccess": true,
-	"ListPrincipalsWithAccess": true, "GetGroup": true, "ListGroups": true,
-	"ListGroupMembers": true, "ListGroupsForPrincipal": true,
-	"GetTotalRolesAndPermissionsForOrganisation": true,
-}
-
-// IsIdempotent reports whether the full gRPC method name is retried on failure.
-func IsIdempotent(fullMethod string) bool {
-	return idempotent[strings.TrimPrefix(fullMethod, servicePrefix)]
-}
-
-func interceptor(authorization string, timeout time.Duration, retries int) grpc.UnaryClientInterceptor {
-	return func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		ctx = metadata.AppendToOutgoingContext(ctx, "authorization", authorization)
-		max := 0
-		if IsIdempotent(method) {
-			max = retries
-		}
-		delay := 100 * time.Millisecond
-		for attempt := 0; ; attempt++ {
-			actx, cancel := context.WithTimeout(ctx, timeout)
-			err := invoker(actx, method, req, reply, cc, opts...)
-			cancel()
-			if err == nil {
-				return nil
-			}
-			perr := toError(err).(*Error)
-			if ctx.Err() != nil || attempt >= max || (perr.Code != codes.Unavailable && perr.Code != codes.DeadlineExceeded) {
-				return perr
-			}
-			sleep := delay/2 + time.Duration(rand.Int64N(int64(delay/2)+1))
-			select {
-			case <-time.After(sleep):
-			case <-ctx.Done():
-				return toError(ctx.Err())
-			}
-			if delay < 2*time.Second {
-				delay *= 2
-			}
-		}
-	}
+	s := c.SDK.WithProject(project)
+	return &Client{SDK: s, Raw: s.Permissions(), Project: project}
 }
