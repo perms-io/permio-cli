@@ -11,9 +11,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/PrivateJAR/permio-cli/internal/settings"
-	"github.com/PrivateJAR/permio-cli/pkg/configsync"
-	"github.com/PrivateJAR/permio-cli/pkg/permio"
+	"github.com/perms-io/permio-cli/internal/settings"
+	"github.com/perms-io/permio-cli/pkg/configsync"
+	"github.com/perms-io/permio-cli/pkg/permio"
 )
 
 const fileFormatHelp = `File format (permio.yaml):

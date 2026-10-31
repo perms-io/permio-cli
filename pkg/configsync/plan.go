@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/PrivateJAR/permio-cli/pkg/permio"
+	"github.com/perms-io/permio-cli/pkg/permio"
 )
 
 // Action is what a change does.

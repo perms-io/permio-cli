@@ -1,9 +1,9 @@
-module github.com/PrivateJAR/permio-cli
+module github.com/perms-io/permio-cli
 
 go 1.24.0
 
 require (
-	github.com/PrivateJAR/permio-go v0.1.0
+	github.com/perms-io/permio-go v0.3.0
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/term v0.39.0
 	google.golang.org/grpc v1.80.0

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/PrivateJAR/permio-cli/main/schema/permio.schema.json",
+  "$id": "https://raw.githubusercontent.com/perms-io/permio-cli/main/schema/permio.schema.json",
   "title": "Permio project configuration (permio.yaml)",
   "description": "Permissions, roles, groups and grants of one perms.io project, managed with `permio plan` and `permio apply`. Objects in the file are created or updated. A role's permissions, a group's members (when given) and a grant's roles and permissions are each the full set. With --prune, objects in the project that are not in the file are deleted.",
   "type": "object",

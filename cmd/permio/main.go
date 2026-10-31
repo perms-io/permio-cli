@@ -4,7 +4,7 @@ package main
 import (
 	"os"
 
-	"github.com/PrivateJAR/permio-cli/internal/cli"
+	"github.com/perms-io/permio-cli/internal/cli"
 )
 
 func main() {

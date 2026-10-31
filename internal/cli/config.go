@@ -7,11 +7,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/PrivateJAR/permio-cli/internal/settings"
-	"github.com/PrivateJAR/permio-cli/pkg/apikey"
+	"github.com/perms-io/permio-cli/internal/settings"
+	"github.com/perms-io/permio-cli/pkg/apikey"
 )
 
-// Set at build time with -ldflags "-X github.com/PrivateJAR/permio-cli/internal/cli.Version=...".
+// Set at build time with -ldflags "-X github.com/perms-io/permio-cli/internal/cli.Version=...".
 var (
 	Version = "dev"
 	Commit  = ""

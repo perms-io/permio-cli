@@ -15,8 +15,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 
-	"github.com/PrivateJAR/permio-cli/pkg/apikey"
-	"github.com/PrivateJAR/permio-cli/pkg/fakeserver"
+	"github.com/perms-io/permio-cli/pkg/apikey"
+	"github.com/perms-io/permio-cli/pkg/fakeserver"
 )
 
 func mustKey(t testing.TB, body string) string {

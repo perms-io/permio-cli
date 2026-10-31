@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/PrivateJAR/permio-cli/pkg/permio"
+	"github.com/perms-io/permio-cli/pkg/permio"
 )
 
 // Result reports what Apply did.

@@ -6,7 +6,7 @@ import (
 	"slices"
 	"sort"
 
-	sdk "github.com/PrivateJAR/permio-go"
+	sdk "github.com/perms-io/permio-go"
 )
 
 func listOpts(search string) *sdk.ListOptions { return &sdk.ListOptions{Search: search} }
