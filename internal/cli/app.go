@@ -144,7 +144,7 @@ func (a *App) handleError(err error) int {
 	switch code {
 	case ExitAuth:
 		if hasPE && pe.Code != 0 {
-			fmt.Fprintln(a.Stderr, "Hint: the API rejected this key. It may have been revoked, or belong to the other environment (prod vs dev; see --api-url). Check `permio config list` for which key is in use.")
+			fmt.Fprintln(a.Stderr, "Hint: the API rejected this key. It may have been revoked, or belong to a different server (see --api-url). Check `permio config list` for which key is in use.")
 			break
 		}
 		fmt.Fprintln(a.Stderr, "Hint: set an API key with --api-key, PERMIO_API_KEY or `permio config set api-key <key>`. Keys come from the dashboard at https://app.perms.io.")
@@ -204,7 +204,7 @@ Exit codes:
 	})
 	pf := root.PersistentFlags()
 	pf.StringVar(&a.flagAPIKey, "api-key", "", "API key (env PERMIO_API_KEY)")
-	pf.StringVar(&a.flagAPIURL, "api-url", "", `API address: host[:port], https://host, "prod" or "dev" (env PERMIO_API_URL; default prod, `+settings.DefaultAPIURL+")")
+	pf.StringVar(&a.flagAPIURL, "api-url", "", `API address: host[:port], https://host or "prod" (env PERMIO_API_URL; default prod, `+settings.DefaultAPIURL+")")
 	pf.StringVar(&a.flagProject, "project", "", `project name (env PERMIO_PROJECT; default "default")`)
 	pf.StringVar(&a.flagProfile, "profile", "", "config profile to use (env PERMIO_PROFILE)")
 	pf.BoolVar(&a.jsonOut, "json", false, "print machine-readable JSON")

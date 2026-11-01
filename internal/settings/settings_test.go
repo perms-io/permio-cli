@@ -15,7 +15,7 @@ func TestResolvePrecedence(t *testing.T) {
 	f := &File{
 		CurrentProfile: "work",
 		Profiles: map[string]*Profile{
-			"work":  {APIKey: "profile-key", APIURL: "dev", Project: "profile-project"},
+			"work":  {APIKey: "profile-key", APIURL: "api.example.com", Project: "profile-project"},
 			"other": {APIKey: "other-key"},
 		},
 	}
@@ -25,13 +25,13 @@ func TestResolvePrecedence(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if r.APIKey != "profile-key" || r.APIKeySource != SourceProfile || r.Project != "profile-project" || r.APIURL != "dev" {
+	if r.APIKey != "profile-key" || r.APIKeySource != SourceProfile || r.Project != "profile-project" || r.APIURL != "api.example.com" {
 		t.Fatalf("profile: %+v", r)
 	}
 
 	// Env beats profile.
 	r, _ = Resolve(f, Overrides{}, env(map[string]string{EnvAPIKey: "env-key", EnvProject: "env-project"}))
-	if r.APIKey != "env-key" || r.APIKeySource != SourceEnv || r.Project != "env-project" || r.APIURL != "dev" {
+	if r.APIKey != "env-key" || r.APIKeySource != SourceEnv || r.Project != "env-project" || r.APIURL != "api.example.com" {
 		t.Fatalf("env: %+v", r)
 	}
 
@@ -89,14 +89,14 @@ func TestSaveIsPrivate(t *testing.T) {
 
 func TestParseAPIURL(t *testing.T) {
 	cases := map[string]Endpoint{
-		"":                          {Address: DefaultAPIURL},
-		"dev":                       {Address: DevAPIURL},
-		"api.perms.io":              {Address: "api.perms.io:443"},
-		"https://dev-api.perms.io/": {Address: "dev-api.perms.io:443"},
-		"https://example.com:8443":  {Address: "example.com:8443"},
-		"http://localhost:8080":     {Address: "localhost:8080", Insecure: true},
-		"temp-api.perms.io:443":     {Address: "temp-api.perms.io:443"},
-		"[::1]:9000":                {Address: "[::1]:9000"},
+		"":                         {Address: DefaultAPIURL},
+		"prod":                     {Address: DefaultAPIURL},
+		"api.perms.io":             {Address: "api.perms.io:443"},
+		"https://api.example.com/": {Address: "api.example.com:443"},
+		"https://example.com:8443": {Address: "example.com:8443"},
+		"http://localhost:8080":    {Address: "localhost:8080", Insecure: true},
+		"api.example.org:443":      {Address: "api.example.org:443"},
+		"[::1]:9000":               {Address: "[::1]:9000"},
 	}
 	for in, want := range cases {
 		got, err := ParseAPIURL(in)
@@ -104,7 +104,9 @@ func TestParseAPIURL(t *testing.T) {
 			t.Errorf("ParseAPIURL(%q) = %+v, %v; want %+v", in, got, err, want)
 		}
 	}
-	for _, bad := range []string{"ftp://x", "https://x/path"} {
+	// "dev" is not a built-in environment: it must fail, not resolve to a
+	// host named "dev" or fall back to production.
+	for _, bad := range []string{"ftp://x", "https://x/path", "dev", "DEV", " development "} {
 		if _, err := ParseAPIURL(bad); err == nil {
 			t.Errorf("ParseAPIURL(%q): expected error", bad)
 		}

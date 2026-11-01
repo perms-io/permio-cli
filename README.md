@@ -74,8 +74,9 @@ Settings, from highest to lowest precedence:
 | Project | `--project` | `PERMIO_PROJECT` | `project` | `default` |
 | Profile | `--profile` | `PERMIO_PROFILE` | `permio config use` | `default` |
 
-`--api-url` accepts `host`, `host:port`, `https://host[:port]`, or the aliases
-`prod` and `dev` (`dev-api.perms.io:443`).
+`--api-url` accepts `host`, `host:port`, `https://host[:port]`, or the alias
+`prod`. Production is the only built-in environment; to use another server,
+give its address.
 
 ### Profiles
 
@@ -86,24 +87,24 @@ because it holds API keys.
 ```sh
 permio config set api-key perms_...                      # default profile
 printf '%s' "$KEY" | permio config set api-key -         # read the key from stdin
-permio config set --profile dev api-url dev
-permio config set --profile dev api-key perms_...
-permio config set --profile dev project staging
-permio config use dev                                    # make dev the current profile
+permio config set --profile staging api-url api.example.com
+permio config set --profile staging api-key perms_...
+permio config set --profile staging project staging
+permio config use staging                                # make staging the current profile
 permio config list                                       # profiles (keys redacted) and effective settings
-permio config unset --profile dev project
+permio config unset --profile staging project
 permio config path
 ```
 
 ```yaml
 # ~/.config/permio/config.yaml
-current_profile: dev
+current_profile: staging
 profiles:
   default:
     api_key: perms_...
-  dev:
+  staging:
     api_key: perms_...
-    api_url: dev
+    api_url: api.example.com
     project: staging
 ```
 

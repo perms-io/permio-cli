@@ -20,8 +20,6 @@ import (
 const (
 	// DefaultAPIURL is the production gateway.
 	DefaultAPIURL = "api.perms.io:443"
-	// DevAPIURL is the development gateway.
-	DevAPIURL = "dev-api.perms.io:443"
 	// DefaultProject is created with every organisation.
 	DefaultProject = "default"
 	// DefaultProfile is used when no profile is selected.
@@ -235,15 +233,16 @@ type Endpoint struct {
 }
 
 // ParseAPIURL accepts "host", "host:port", "https://host[:port]",
-// "http://host:port" (plaintext, for local servers) and the aliases "prod" and
-// "dev". The port defaults to 443 (80 for http://).
+// "http://host:port" (plaintext, for local servers) and the alias "prod". The
+// port defaults to 443 (80 for http://). Production is the only built-in
+// environment; any other server must be given by its address.
 func ParseAPIURL(raw string) (Endpoint, error) {
 	s := strings.TrimSpace(raw)
 	switch strings.ToLower(s) {
 	case "", "prod", "production":
 		return Endpoint{Address: DefaultAPIURL}, nil
 	case "dev", "development":
-		return Endpoint{Address: DevAPIURL}, nil
+		return Endpoint{}, fmt.Errorf("invalid API URL %q: there is no built-in %q environment; give the server's address (host[:port] or https://host)", raw, s)
 	}
 	insecure := false
 	port := "443"
