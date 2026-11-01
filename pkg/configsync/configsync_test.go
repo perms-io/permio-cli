@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PrivateJAR/permio-cli/pkg/apikey"
-	"github.com/PrivateJAR/permio-cli/pkg/fakeserver"
-	"github.com/PrivateJAR/permio-cli/pkg/permio"
+	"github.com/perms-io/permio-cli/pkg/apikey"
+	"github.com/perms-io/permio-cli/pkg/fakeserver"
+	"github.com/perms-io/permio-cli/pkg/permio"
 )
 
 func TestParseForms(t *testing.T) {

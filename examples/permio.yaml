@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/PrivateJAR/permio-cli/main/schema/permio.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/perms-io/permio-cli/main/schema/permio.schema.json
 #
 # Example project for `permio plan -f examples/permio.yaml`.
 project: default

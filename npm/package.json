@@ -3,13 +3,13 @@
   "version": "0.1.0",
   "description": "perms.io command-line interface (permio). Downloads the prebuilt Go binary for your platform.",
   "license": "Apache-2.0",
-  "homepage": "https://github.com/PrivateJAR/permio-cli#readme",
+  "homepage": "https://github.com/perms-io/permio-cli#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/PrivateJAR/permio-cli.git",
+    "url": "git+https://github.com/perms-io/permio-cli.git",
     "directory": "npm"
   },
-  "bugs": "https://github.com/PrivateJAR/permio-cli/issues",
+  "bugs": "https://github.com/perms-io/permio-cli/issues",
   "keywords": ["permio", "perms.io", "permissions", "authorization", "rbac", "cli"],
   "bin": {
     "permio": "bin/permio.js"

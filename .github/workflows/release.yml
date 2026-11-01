@@ -2,7 +2,7 @@ name: Release
 
 # Builds binaries for darwin/linux/windows (amd64, arm64) with checksums and
 # creates a DRAFT GitHub release when a v* tag is pushed. Publish the draft by
-# hand. The Homebrew cask is pushed to PrivateJAR/homebrew-tap only when the
+# hand. The Homebrew cask is pushed to perms-io/homebrew-tap only when the
 # HOMEBREW_TAP_GITHUB_TOKEN secret is set.
 on:
   push:

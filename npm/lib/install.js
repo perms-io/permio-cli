@@ -14,7 +14,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { execFileSync } = require("node:child_process");
 
-const REPO = "PrivateJAR/permio-cli";
+const REPO = "perms-io/permio-cli";
 const pkg = require("../package.json");
 const version = pkg.version;
 

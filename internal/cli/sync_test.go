@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PrivateJAR/permio-cli/pkg/configsync"
+	"github.com/perms-io/permio-cli/pkg/configsync"
 )
 
 const sampleConfig = `

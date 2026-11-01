@@ -3,12 +3,12 @@ package permio
 import (
 	"fmt"
 
-	sdk "github.com/PrivateJAR/permio-go"
+	sdk "github.com/perms-io/permio-go"
 	"google.golang.org/grpc/codes"
 )
 
 // The types, errors and helpers below are the public SDK's
-// (github.com/PrivateJAR/permio-go). They are re-exported so the CLI and
+// (github.com/perms-io/permio-go). They are re-exported so the CLI and
 // configsync keep using this package's names.
 
 type (

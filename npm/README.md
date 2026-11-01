@@ -1,6 +1,6 @@
 # permio-cli
 
-npm wrapper for [`permio`](https://github.com/PrivateJAR/permio-cli), the
+npm wrapper for [`permio`](https://github.com/perms-io/permio-cli), the
 perms.io command-line interface. It lets you (and AI agents) run the CLI with
 `npx` without installing Go or a binary by hand:
 

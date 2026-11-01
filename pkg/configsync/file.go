@@ -18,12 +18,12 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/PrivateJAR/permio-cli/pkg/permio"
+	"github.com/perms-io/permio-cli/pkg/permio"
 )
 
 // SchemaURL is the JSON Schema for the file, referenced from exported files
 // for editor autocompletion.
-const SchemaURL = "https://raw.githubusercontent.com/PrivateJAR/permio-cli/main/schema/permio.schema.json"
+const SchemaURL = "https://raw.githubusercontent.com/perms-io/permio-cli/main/schema/permio.schema.json"
 
 // File is a permio.yaml file.
 //

@@ -17,9 +17,9 @@ import (
 	"golang.org/x/term"
 	"google.golang.org/grpc"
 
-	"github.com/PrivateJAR/permio-cli/internal/settings"
-	"github.com/PrivateJAR/permio-cli/pkg/apikey"
-	"github.com/PrivateJAR/permio-cli/pkg/permio"
+	"github.com/perms-io/permio-cli/internal/settings"
+	"github.com/perms-io/permio-cli/pkg/apikey"
+	"github.com/perms-io/permio-cli/pkg/permio"
 )
 
 // Exit codes.

@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/PrivateJAR/permio-cli/pkg/permio"
+	"github.com/perms-io/permio-cli/pkg/permio"
 )
 
 func (a *App) newGroupsCmd() *cobra.Command {

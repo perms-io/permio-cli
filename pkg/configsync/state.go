@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/PrivateJAR/permio-cli/pkg/permio"
+	"github.com/perms-io/permio-cli/pkg/permio"
 )
 
 // GroupState is a group with its members.

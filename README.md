@@ -32,19 +32,19 @@ Not released yet. Once it is:
 
 ```sh
 # Homebrew (macOS, Linux)
-brew install PrivateJAR/tap/permio
+brew install perms-io/tap/permio
 
 # npm / npx (downloads the prebuilt binary for your platform)
 npx permio-cli --help
 npm install -g permio-cli
 
 # Go 1.24+
-go install github.com/PrivateJAR/permio-cli/cmd/permio@latest
+go install github.com/perms-io/permio-cli/cmd/permio@latest
 ```
 
 Prebuilt archives for macOS, Linux and Windows (amd64 and arm64), with a
 `checksums.txt`, are attached to each
-[GitHub release](https://github.com/PrivateJAR/permio-cli/releases).
+[GitHub release](https://github.com/perms-io/permio-cli/releases).
 
 Shell completion: `permio completion bash|zsh|fish|powershell --help` explains
 how to load it.
@@ -264,7 +264,7 @@ Describe a project in `permio.yaml`, review the diff with `plan`, and make it so
 with `apply`. `export` writes the project's current state in the same format.
 
 ```yaml
-# yaml-language-server: $schema=https://raw.githubusercontent.com/PrivateJAR/permio-cli/main/schema/permio.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/perms-io/permio-cli/main/schema/permio.schema.json
 project: default
 permissions:
   - document.read
