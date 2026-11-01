@@ -29,9 +29,9 @@ an API URL and a project. The file is written with 0600 permissions.
 Select a profile with --profile, PERMIO_PROFILE, or 'permio config use'.
 Flags and environment variables override profile values.`,
 		Example: `  permio config set api-key perms_...
-  permio config set --profile dev api-url dev
-  permio config set --profile dev project staging
-  permio config use dev
+  permio config set --profile staging api-url api.example.com
+  permio config set --profile staging project staging
+  permio config use staging
   permio config list`,
 	}
 	cmd.AddCommand(a.configSet(), a.configUnset(), a.configUse(), a.configList(), a.configPathCmd())
@@ -55,7 +55,7 @@ api-url, project. The profile is --profile, else the current profile, else
 history). API keys are checked for the right format before saving.`,
 		Example: `  permio config set api-key perms_...
   printf '%s' "$KEY" | permio config set api-key -
-  permio config set --profile dev api-url dev
+  permio config set --profile staging api-url api.example.com
   permio config set project my-app`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -114,7 +114,7 @@ func (a *App) configUnset() *cobra.Command {
 	return &cobra.Command{
 		Use:     "unset <key>",
 		Short:   "Remove api-key, api-url or project from a profile",
-		Example: `  permio config unset --profile dev api-key`,
+		Example: `  permio config unset --profile staging api-key`,
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path, err := a.configPath()
@@ -151,7 +151,7 @@ func (a *App) configUse() *cobra.Command {
 	return &cobra.Command{
 		Use:     "use <profile>",
 		Short:   "Make a profile the current one",
-		Example: `  permio config use dev`,
+		Example: `  permio config use staging`,
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path, err := a.configPath()
