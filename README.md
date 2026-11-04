@@ -1,5 +1,9 @@
 # permio
 
+**[Permio](https://perms.io) is hosted authorization for your app: RBAC and fine-grained permission checks on hierarchical resources, for multi-tenant SaaS.**
+
+[Website](https://perms.io) · [Docs](https://docs.perms.io/) · [Quickstart](https://docs.perms.io/quickstart/) · [Dashboard](https://app.perms.io)
+
 `permio` is the command-line interface for [perms.io](https://perms.io). Use it to
 check permissions, manage permissions, roles, grants and groups, and keep a
 whole project in a `permio.yaml` file (plan, apply, export).
